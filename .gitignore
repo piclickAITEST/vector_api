@@ -1,0 +1,13 @@
+
+test_img/*
+
+*.pt
+*.weights
+
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+
+__pycache__
