@@ -13,11 +13,11 @@ class Yolov3():
     except:
         mixed_precision = False  # not installed
 
-    cfg = '/home/piclick/vector_api/vector_db/yolov3/cfg/fashion/fashion_c14.cfg'
-    names_path = '/home/piclick/vector_api/vector_db/yolov3/data/fashion/fashion_c14.names'
+    cfg = '/home/vector_api/vector_db/yolov3/cfg/fashion/fashion_c14.cfg'
+    names_path = '/home/vector_api/vector_db/yolov3/data/fashion/fashion_c14.names'
     img_size = 416
     batch_size = 64
-    weights = '/home/piclick/vector_api/vector_db/yolov3/weights/exp3_best_20200109.pt'
+    weights = '/home/weights/exp3_best_20200109.pt'
     device = torch_utils.select_device('', apex=mixed_precision, batch_size=batch_size)
 
     model = Darknet(cfg, arc='default').to(device).eval()
@@ -27,7 +27,7 @@ class Yolov3():
     else:  # darknet format
         print('no weight')
 
-    def vector_extraction_batch(bulk_path, batch_size, pooling = 'max'):
+    def vector_extraction_batch(self, bulk_path, batch_size, pooling = 'max'):
         img_res = {}
         list_names = []
 
@@ -36,7 +36,7 @@ class Yolov3():
         for i in range(len(names)):
             list_names.append([])
 
-        dataset = LoadImages(bulk_path, img_size, batch_size=batch_size)
+        dataset = LoadImages(bulk_path, self.img_size, batch_size=batch_size)
         batch_size = min(batch_size, len(dataset))
         dataloader = DataLoader(dataset,
                                 batch_size=batch_size,
@@ -49,15 +49,17 @@ class Yolov3():
 
             torch.cuda.empty_cache()
             with torch.no_grad():
-                imgs = imgs.to(device).float() / 255.0
+                imgs = imgs.to(self.device).float() / 255.0
                 _, _, height, width = imgs.shape
 
-                layerResult = LayerResult(model.module_list, 80)
+                layerResult = LayerResult(self.model.module_list, 80)
 
-                pred = model(imgs)[0]
+                pred = self.model(imgs)[0]
 
                 layerResult_tensor = layerResult.features.permute([0,2,3,1])
                 kernel_size = layerResult_tensor.shape[1]
+
+                LayerResult.unregister_forward_hook(layerResult)
 
                 # box info
                 pred = non_max_suppression(pred, conf_thres=0.5, nms_thres=0.5)
@@ -68,18 +70,19 @@ class Yolov3():
 
                     raw_box = np.asarray(det[:, :4].detach().cpu().numpy(), dtype= np.float32)
 
-                    ratio = kernel_size / img_size
+                    ratio = kernel_size / self.img_size
                     det[:, :4] = det[:, :4] * ratio
 
                     feature_box = np.asarray(det[:, :4].detach().cpu().numpy(), dtype=np.int32)
 
                     for (*xyxy, conf, cls), fb, rb in zip(det, feature_box, raw_box):
-                        if conf < 0.9: continue
+                        if conf < 0.6: continue
                         feature_result = layerResult_tensor[i,fb[0]:fb[2] + 1, fb[1]:fb[3] + 1]
 
                         class_data = {
                                     'raw_box': rb,
                                     'feature_vector': max_pooling_tensor(feature_result) if pooling == 'max' else average_pooling_tensor(feature_result),
+                                    'img_path': paths[i]
                                     }
 
 
@@ -91,7 +94,7 @@ class Yolov3():
 
             batch_end = time.time() - batch_time
             print(" Inference time for a image : {}".format(batch_end / batch_size))
-
+            print(" Inference time for batch image : {}".format(batch_end))
         return img_res
 
     def vector_extraction_one_img(self, img_path, pooling='max'):
@@ -121,6 +124,8 @@ class Yolov3():
 
             layerResult_tensor = layerResult.features.permute([0, 2, 3, 1])
             kernel_size = layerResult_tensor.shape[1]
+
+            LayerResult.unregister_forward_hook(layerResult)
 
             # box info
             pred = non_max_suppression(pred, conf_thres=0.5, nms_thres=0.5)

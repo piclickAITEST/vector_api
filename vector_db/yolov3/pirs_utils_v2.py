@@ -106,7 +106,7 @@ def transfer(path, mode):
 class LoadImages(Dataset):
     def __init__(self, path, img_size=416, batch_size=16):
 
-        path = glob.glob(path)
+        #path = glob.glob(path)
         self.img_files = [x for x in path if "." + x.split('.')[-1].lower() in img_formats]
 
         n = len(self.img_files)
