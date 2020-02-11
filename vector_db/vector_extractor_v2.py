@@ -76,7 +76,7 @@ class Yolov3():
                     feature_box = np.asarray(det[:, :4].detach().cpu().numpy(), dtype=np.int32)
 
                     for (*xyxy, conf, cls), fb, rb in zip(det, feature_box, raw_box):
-                        if conf < 0.6: continue
+                        if conf < 0.7: continue
                         feature_result = layerResult_tensor[i,fb[0]:fb[2] + 1, fb[1]:fb[3] + 1]
 
                         class_data = {

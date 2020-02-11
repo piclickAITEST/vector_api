@@ -20,6 +20,8 @@ import base64
 import numpy as np
 import time
 import pymysql
+import json
+import urllib.request
 
 from .vector_extractor_v2 import Yolov3
 
@@ -28,13 +30,36 @@ from .vector_extractor_v2 import Yolov3
 def index(request):
     return HttpResponse('django vector api server test')
 
+def search_process(self):
+    st_time = time.time()
+    ITV = ImageToVector()
+
+    path = 'https://09imgmini.eastday.com/mobile/20200211/20200211011603_cb30a42d261f935fa2ca5ba3c2aa921d_2.jpeg'
+    save_path = '/home/searchimg/'+path.split('/')[-1]
+    urllib.request.urlretrieve(path,save_path)
+
+    vec = ImageToVector.vector_extract(ITV, batch=False, data=save_path)
+
+    if len(vec) == 0:
+        print('no box')
+
+    index = list(vec.keys())[0]
+    vector = vec[index][0]['feature_vector']
+    vector_bs = ImageToVector.encode_array(vector)
+
+    res = ImageToVector.searchVec(ITV, index, vector_bs)
+    end_time = time.time()-st_time
+    print(end_time)
+    return HttpResponse(res)
+
 def all_process(self, bulk=True):
-    sql = 'SELECT * FROM product_list LIMIT 20000'
+    sql = 'SELECT * FROM product_list LIMIT 2000000'
     #sql = 'SELECT * FROM product_list LIMIT 200'
     ITV = ImageToVector()
     product_list = ITV.connect_db_get_Date(sql)
 
     if bulk:
+        st_time = time.time()
         data_dict = {}
         img_path_list = []
         for product in product_list:
@@ -64,7 +89,7 @@ def all_process(self, bulk=True):
 
                     ITV.vector2elk(index, new_line)
 
-            print('send all')
+            print('send all', time.time()-st_time)
 
         print('total box count', total_box)
 
@@ -96,8 +121,6 @@ class ImageToVector():
     dataFormat = "%Y-%m-%d %H:%M:%S"
     dfloat32 = np.dtype('>f4')
     base_img_path = "/mnt/piclick/piclick.tmp/AIMG/"
-
-
 
     es = Elasticsearch('49.247.197.215:9200')
 
@@ -159,14 +182,46 @@ class ImageToVector():
                "vector_bs": self.encode_array(data[7]),
                "@timestamp": ImageToVector.utc_time()}
 
-        index = "vector_2nd_" + index.lower()
+        index = "vector_3nd_" + index.lower()
 
-        with open('mapping.json') as f:
+        with open('/home/vector_api/vector_db/mapping.json') as f:
             mapping = json.load(f)
 
             #test
+        try:
+            self.es.indices.create(index=index, body=mapping)
+        except:
+            pass
+        finally:
+            self.es.index(index=index, doc_type="_doc", body=doc)
 
-        self.es.indices.create(index=index, body=mapping)
-        self.es.index(index=index, doc_type="_doc", body=doc)
+
+    def searchVec(self, search_index, search_vec):
+
+        search_index = 'vector_'+ search_index.lower()
+
+        res = self.es.search(
+                index = search_index,
+                body  = {
+                          "query": {"function_score": {
+                              "boost_mode": "replace",
+                              "script_score": {"script": {
+                                 "source": "binary_vector_score","lang": "knn",
+                                  "params": {
+                                    "cosine": True,
+                                    "field": "vector_bs",
+                                    "encoded_vector": search_vec
+                                  }
+                                }
+                              }
+                            }
+                          },
+                    "size": 10
+                }
+        )
+
+        return json.dumps(res, ensure_ascii=True, indent='\t')
+
+
 
 
