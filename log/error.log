@@ -1,0 +1,11 @@
+[2020-02-11 12:06:37 +0900] [30037] [INFO] Starting gunicorn 20.0.4
+[2020-02-11 12:06:37 +0900] [30037] [INFO] Listening at: http://0.0.0.0:8888 (30037)
+[2020-02-11 12:06:37 +0900] [30037] [INFO] Using worker: sync
+[2020-02-11 12:06:37 +0900] [30040] [INFO] Booting worker with pid: 30040
+[2020-02-11 12:06:37 +0900] [30041] [INFO] Booting worker with pid: 30041
+[2020-02-11 12:06:37 +0900] [30044] [INFO] Booting worker with pid: 30044
+[2020-02-11 12:16:48 +0900] [30040] [INFO] Worker exiting (pid: 30040)
+[2020-02-11 12:16:48 +0900] [30044] [INFO] Worker exiting (pid: 30044)
+[2020-02-11 12:16:48 +0900] [30041] [INFO] Worker exiting (pid: 30041)
+[2020-02-11 12:16:48 +0900] [30037] [INFO] Handling signal: term
+[2020-02-11 12:16:49 +0900] [30037] [INFO] Shutting down: Master

@@ -1,0 +1,25 @@
+version: '3.6'
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - .:/vector_api
+      - ./config/nginx:/etc/nginx/conf.d
+    depends_on:
+      - web
+
+  web:
+    build:
+      context: .   
+      dockerfile: Dockerfile
+    shm_size: '30gb'
+    command: df -k /dev/shm
+    command: gunicorn --workers 3  vector_api.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/vector_api
+      - /mnt:/mnt
+      - /home/weights:/home/weights
+    expose:
+      - "8000"    

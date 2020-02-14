@@ -103,6 +103,16 @@ def transfer(path, mode):
 
     return img, img0
 
+def transfer_b64(decode_img, mode):
+    img_size = 416
+    img0 = decode_img
+    img = letterbox(img0, new_shape=img_size, mode=mode)[0]
+    img = img[:, :, ::-1].transpose(2, 0, 1)
+    img = np.ascontiguousarray(img, dtype=np.float32)
+    img /= 255.0
+
+    return img, img0
+
 class LoadImages(Dataset):
     def __init__(self, path, img_size=416, batch_size=16):
 
@@ -127,17 +137,17 @@ class LoadImages(Dataset):
         img_path = self.img_files[index]
 
         # Load image
-        img = load_image(self, index)
+        img0 = load_image(self, index)
 
         # Letterbox
-        h, w = img.shape[:2]
-        img, ratiow, ratioh, _, _ = letterbox(img, new_shape=416, color=(128,128,128), mode='square')
+        h0, w0 = img0.shape[:2]
+        img, ratiow, ratioh, _, _ = letterbox(img0, new_shape=416, color=(128,128,128), mode='square')
 
         # Convert
         img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
         img = np.ascontiguousarray(img)
 
-        return torch.from_numpy(img), img_path, ((h, w), (ratiow, ratioh))
+        return torch.from_numpy(img), img_path, (h0, w0)
 
     @staticmethod
     def collate_fn(batch):
