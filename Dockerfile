@@ -1,4 +1,4 @@
-FROM python:3.6.9
+FROM piclickdocker/django_python:3.6.9
 
 ENV PYTHONUNBUFFERED 1
 

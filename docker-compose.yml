@@ -16,7 +16,7 @@ services:
       dockerfile: Dockerfile
     shm_size: '30gb'
     command: df -k /dev/shm
-    command: gunicorn --workers 3  vector_api.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn --workers 8  vector_api.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/vector_api
       - /mnt:/mnt

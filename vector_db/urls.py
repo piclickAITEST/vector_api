@@ -6,7 +6,7 @@ app_name = 'vector_db'
 
 urlpatterns = [
     path('', views.index),
-    path('imgTovec/', views.all_process),
-    path('searchVec/', views.search_process),
+    path('imgTovec/', views.save_vector_ela),
+    path('searchVec/', views.search_vector_service),
     path('putdb/', views.put_database)
 ]
