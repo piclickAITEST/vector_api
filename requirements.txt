@@ -1,7 +1,7 @@
 Django==3.0.3
 django-elasticsearch-dsl==7.1.1
 django-elasticsearch-dsl-drf==0.20.5
-djangorestframework==3.11.0
+djangorestframework==3.11.2
 elasticsearch==7.5.1
 gunicorn==20.0.4
 imageio==2.6.1
