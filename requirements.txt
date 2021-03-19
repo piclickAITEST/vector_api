@@ -10,7 +10,7 @@ ipython-genutils==0.2.0
 matplotlib==3.1.3
 numpy==1.18.1
 opencv-python==4.2.0.32
-Pillow==7.0.0
+Pillow==8.1.1
 PyMySQL==0.9.3
 python-dateutil==2.8.1
 scikit-image==0.16.2
